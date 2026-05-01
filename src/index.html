@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SIPSE Auth</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 400px;
+            margin: 40px auto;
+        }
+
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        input, select, button {
+            width: 100%;
+            margin: 6px 0;
+            padding: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .link {
+            color: blue;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- LOGIN -->
+    <div id="loginView">
+        <h3>Iniciar sesión</h3>
+
+        <input id="loginEmail" placeholder="Correo">
+        <input id="loginPassword" type="password" placeholder="Contraseña">
+
+        <button onclick="login()">Entrar</button>
+
+        <p id="loginMsg"></p>
+
+        <p class="link" onclick="showRegister()">
+            ¿No tienes cuenta? Regístrate
+        </p>
+    </div>
+
+    <!-- REGISTER -->
+<div id="registerView" class="hidden">
+    <h3>Registro</h3>
+
+    <input id="regUsername" placeholder="Username">
+    <input id="regEmail" placeholder="Correo">
+    <input id="regPassword" type="password" placeholder="Contraseña">
+
+    <p id="passwordStrength"></p>
+    <p id="passwordError" class="error"></p>
+    <p id="emailError" class="error"></p>
+    <p id="usernameError" class="error"></p>
+    <p id="roleError" class="error"></p>
+
+    <select id="regRole">
+        <option value="">Seleccione rol</option>
+        <option value="Admin">Admin</option>
+        <option value="Tecnico">Tecnico</option>
+    </select>
+
+    <button onclick="register()">Crear cuenta</button>
+
+    <p id="regMsg"></p>
+
+    <p class="link" onclick="showLogin()">
+        ¿Ya tienes cuenta? Inicia sesión
+    </p>
+</div>
+
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000/users";
+
+// =========================
+// UI SWITCH
+// =========================
+function showRegister() {
+    document.getElementById("loginView").classList.add("hidden");
+    document.getElementById("registerView").classList.remove("hidden");
+}
+
+function showLogin() {
+    document.getElementById("registerView").classList.add("hidden");
+    document.getElementById("loginView").classList.remove("hidden");
+}
+
+// =========================
+// UTIL
+// =========================
+function showMsg(id, msg, isError = true) {
+    const el = document.getElementById(id);
+    el.innerText = msg;
+    el.className = isError ? "error" : "success";
+}
+
+function validarEmail(email) {
+    const regex = /^[\w\.-]+@[\w\.-]+\.\w+$/;
+    return regex.test(email);
+}
+
+// =========================
+// VALIDACIÓN PASSWORD
+// =========================
+function validarPassword(password) {
+    let errores = [];
+
+    if (password.length < 8) errores.push("mínimo 8 caracteres");
+    if (!/[A-Z]/.test(password)) errores.push("una mayúscula");
+    if (!/[a-z]/.test(password)) errores.push("una minúscula");
+    if (!/[0-9]/.test(password)) errores.push("un número");
+
+    return errores;
+}
+
+// =========================
+// REGISTER
+// =========================
+async function register() {
+
+    const username = document.getElementById("regUsername").value.trim();
+const usernameErrorEl = document.getElementById("usernameError");
+
+    
+    if (!username) {
+        usernameErrorEl.innerText = "El nombre de usuario es obligatorio.";
+        return; 
+    } else {
+        usernameErrorEl.innerText = "";
+    }
+
+    const email = document.getElementById("regEmail").value;
+    const emailErrorEl = document.getElementById("emailError");
+
+    if (!validarEmail(email)) {
+        emailErrorEl.innerText =
+            "El correo electrónico no tiene un formato válido (ej: usuario@dominio.com).";
+        return;
+    } else {
+        emailErrorEl.innerText = "";
+    }
+
+    
+    const password = document.getElementById("regPassword").value;
+
+    const errores = validarPassword(password);
+
+    const strengthEl = document.getElementById("passwordStrength");
+    const errorEl = document.getElementById("passwordError");
+
+    if (errores.length > 0) {
+        strengthEl.innerText = "Débil";
+        strengthEl.className = "error";
+
+        errorEl.innerText =
+            "La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula y un número.";
+
+        return; 
+    } else {
+        strengthEl.innerText = "Fuerte";
+        strengthEl.className = "success";
+        errorEl.innerText = "";
+    }
+
+    const role = document.getElementById("regRole").value;
+    const roleErrorEl = document.getElementById("roleError");
+
+        
+        if (!role) {
+            roleErrorEl.innerText = "Debe seleccionar un rol.";
+            return; 
+        } else {
+            roleErrorEl.innerText = "";
+        }
+
+
+    // =========================
+    // SI PASA VALIDACIÓN → ENVÍA
+    // =========================
+    const data = {
+        username: document.getElementById("regUsername").value,
+        email: document.getElementById("regEmail").value,
+        password: password,
+        role: document.getElementById("regRole").value
+    };
+
+    try {
+        const res = await fetch(`${API}/register`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+            showMsg("regMsg", json.detail || json.message);
+        } else {
+            showMsg("regMsg", "Registro exitoso. Ahora puedes iniciar sesión.", false);
+
+            setTimeout(() => {
+                showLogin();
+                document.getElementById("loginEmail").value = data.email;
+            }, 1200);
+        }
+
+    } catch (err) {
+        showMsg("regMsg", "Error de conexión.");
+    }
+}
+
+// =========================
+// LOGIN
+// =========================
+async function login() {
+    const data = {
+        email: document.getElementById("loginEmail").value,
+        password: document.getElementById("loginPassword").value
+    };
+
+    try {
+        const res = await fetch(`${API}/login`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+            showMsg("loginMsg", json.detail || json.message);
+        } else {
+            showMsg(
+                "loginMsg",
+                `Bienvenido ${json.user} (${json.role})`,
+                false
+            );
+        }
+
+    } catch (err) {
+        showMsg("loginMsg", "Error de conexión.");
+    }
+}
+
+document.getElementById("regUsername").addEventListener("input", function () {
+    if (this.value.trim()) {
+        document.getElementById("usernameError").innerText = "";
+    }
+});
+
+document.getElementById("regRole").addEventListener("change", function () {
+    if (this.value) {
+        document.getElementById("roleError").innerText = "";
+    }
+});
+
+document.getElementById("regEmail").addEventListener("input", function () {
+    const email = this.value;
+    const emailErrorEl = document.getElementById("emailError");
+
+    if (validarEmail(email)) {
+        emailErrorEl.innerText = "";
+    }
+});
+</script>
+
+</body>
+</html>
