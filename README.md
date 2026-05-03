@@ -51,9 +51,16 @@ pipenv shell
 
 ### 2. Levantar el backend
 
+Desde la raíz del proyecto ejecuta:
+
 ```bash
-cd src
-uvicorn main:app --reload
+pipenv run uvicorn src.main:app --reload
+```
+
+Si ya estás dentro de la shell de Pipenv, usa:
+
+```bash
+uvicorn src.main:app --reload
 ```
 
 La API quedará disponible en `http://localhost:8000`. Puedes explorar los endpoints en `http://localhost:8000/docs`.
@@ -94,6 +101,14 @@ Inicia sesión con email y contraseña. Verifica que el usuario exista y que la 
 
 Las pruebas usan **Selenium con Chrome**, por lo que el navegador se abrirá automáticamente y ejecutará cada flujo en pantalla.
 
+### Mejoras implementadas
+
+- ✅ **Estructura modular**: Clase base `BaseTest` con setup/teardown automáticos
+- ✅ **Manejo de excepciones**: Try/catch en todos los tests con screenshots de error
+- ✅ **Funciones reutilizables**: `fill_form()`, `submit_form()`, `get_error_message()`, etc.
+- ✅ **Logging centralizado**: Logs detallados de cada paso
+- ✅ **Setup/teardown global**: Inicialización y cierre automático del driver
+
 ### Pasos
 
 1. Asegúrate de que el backend (`uvicorn`) y el frontend (`http.server`) estén corriendo.
@@ -119,7 +134,9 @@ python test_username_vacio_cp04.py
 python test_rol_vacio_cp05.py
 ```
 
-Cada prueba genera logs en consola e, en los casos que aplica, un **screenshot automático** al finalizar.
+Cada prueba genera logs en consola e, en los casos que aplica, un **screenshot automático** al finalizar. Si falla, se guarda un screenshot de error.
+
+> ⚠️ **Nota**: Para el test CP-01 (registro exitoso), reinicia el backend antes de ejecutarlo si ya hay usuarios registrados en memoria.
 
 ---
 

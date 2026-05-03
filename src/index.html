@@ -6,8 +6,8 @@
 
     <style>
         body {
-            font-family: Arial;
-            max-width: 400px;
+            font-family: Arial, sans-serif;
+            max-width: 420px;
             margin: 40px auto;
         }
 
@@ -15,10 +15,15 @@
             border: 1px solid #ccc;
             padding: 20px;
             border-radius: 8px;
+            max-width: 380px;
+            width: 100%;
         }
 
-        input, select, button {
+        input,
+        select,
+        button {
             width: 100%;
+            box-sizing: border-box;
             margin: 6px 0;
             padding: 8px;
         }
@@ -91,9 +96,7 @@
 <script>
 const API = "http://127.0.0.1:8000/users";
 
-// =========================
-// UI SWITCH
-// =========================
+// UI switch functions
 function showRegister() {
     document.getElementById("loginView").classList.add("hidden");
     document.getElementById("registerView").classList.remove("hidden");
@@ -104,9 +107,6 @@ function showLogin() {
     document.getElementById("loginView").classList.remove("hidden");
 }
 
-// =========================
-// UTIL
-// =========================
 function showMsg(id, msg, isError = true) {
     const el = document.getElementById(id);
     el.innerText = msg;
@@ -118,9 +118,6 @@ function validarEmail(email) {
     return regex.test(email);
 }
 
-// =========================
-// VALIDACIÓN PASSWORD
-// =========================
 function validarPassword(password) {
     let errores = [];
 
@@ -132,9 +129,6 @@ function validarPassword(password) {
     return errores;
 }
 
-// =========================
-// REGISTER
-// =========================
 async function register() {
 
     const username = document.getElementById("regUsername").value.trim();
@@ -228,9 +222,6 @@ const usernameErrorEl = document.getElementById("usernameError");
     }
 }
 
-// =========================
-// LOGIN
-// =========================
 async function login() {
     const data = {
         email: document.getElementById("loginEmail").value,

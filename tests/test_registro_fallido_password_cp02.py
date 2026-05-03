@@ -1,116 +1,59 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
+from test_base import BaseTest
 import logging
 
-# =========================
-# CONFIG LOGGING
-# =========================
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+class TestPasswordDebil(BaseTest):
+    def test_password_debil(self):
+        try:
+            logging.info("=== INICIO TEST: PASSWORD DÉBIL ===")
 
-URL = "http://localhost:5500/index.html"
+            self.setup_method()
+            self.go_to_url()
 
-SLOW_MODE = True
+            # Ir a registro
+            self.navigate_to_register()
 
-def pause():
-    if SLOW_MODE:
-        time.sleep(1.5)
+            # Llenar formulario con password débil
+            self.fill_form(
+                username="juan123",
+                email="juan@email.com",
+                password="abc",
+                role="Tecnico"
+            )
 
-def test_password_debil():
-    logging.info("=== INICIO TEST: PASSWORD DÉBIL ===")
+            # Enviar
+            self.submit_form()
 
-    driver = webdriver.Chrome()
-    driver.maximize_window()
-    driver.get(URL)
+            # Validar indicador de contraseña débil
+            self.wait_for_message("passwordStrength")
+            strength = self.get_message("passwordStrength")
+            logging.info(f"Indicador: {strength}")
+            assert strength == "Débil", f"Esperado 'Débil', obtuvo: {strength}"
 
-    wait = WebDriverWait(driver, 10)
+            # Validar mensaje de error
+            error_msg = self.get_error_message("passwordError")
+            logging.info(f"Mensaje error: {error_msg}")
+            assert "mínimo 8 caracteres" in error_msg
 
-    pause()
+            # Verificar que no se envió el formulario
+            reg_msg = self.get_message("regMsg")
+            assert reg_msg == "", "El formulario se envió cuando no debía"
 
-    # =========================
-    # Ir a REGISTER
-    # =========================
-    logging.info("Navegando a registro")
-    wait.until(EC.element_to_be_clickable(
-        (By.XPATH, "//p[contains(text(),'Regístrate')]")
-    )).click()
+            # Verificar que sigue en registro
+            assert self.is_element_displayed("registerView")
 
-    pause()
+            # Screenshot final
+            self.take_screenshot("test_password_debil.png")
 
-    # =========================
-    # Llenar formulario
-    # =========================
-    logging.info("Llenando formulario con password débil")
+            logging.info("=== TEST FINALIZADO OK ===")
 
-    wait.until(EC.presence_of_element_located((By.ID, "regUsername"))).send_keys("juan123")
-    driver.find_element(By.ID, "regEmail").send_keys("juan@email.com")
-    driver.find_element(By.ID, "regPassword").send_keys("abc")
-    driver.find_element(By.ID, "regRole").send_keys("Tecnico")
-
-    pause()
-
-    # =========================
-    # Click registrar
-    # =========================
-    logging.info("Intentando registrar usuario")
-    driver.find_element(By.XPATH, "//button[contains(text(),'Crear cuenta')]").click()
-
-    pause()
-
-    # =========================
-    # VALIDACIÓN 1
-    # =========================
-    logging.info("Validando indicador de contraseña débil")
-
-    wait.until(lambda d: d.find_element(By.ID, "passwordStrength").text != "")
-
-    strength = driver.find_element(By.ID, "passwordStrength").text
-    logging.info(f"Indicador: {strength}")
-
-    assert strength == "Débil", f"Esperado 'Débil', obtuvo: {strength}"
-
-    # =========================
-    # VALIDACIÓN 2
-    # =========================
-    logging.info("Validando mensaje de error")
-
-    error_msg = driver.find_element(By.ID, "passwordError").text
-    logging.info(f"Mensaje error: {error_msg}")
-
-    assert "mínimo 8 caracteres" in error_msg
-
-    # =========================
-    # VALIDACIÓN 3
-    # =========================
-    logging.info("Verificando que no se envió el formulario")
-
-    reg_msg = driver.find_element(By.ID, "regMsg").text
-    assert reg_msg == "", "El formulario se envió cuando no debía"
-
-    # =========================
-    # VALIDACIÓN 4
-    # =========================
-    logging.info("Verificando que sigue en registro")
-
-    assert driver.find_element(By.ID, "registerView").is_displayed()
-
-    # =========================
-    # SCREENSHOT FINAL
-    # =========================
-    driver.save_screenshot("test_password_debil.png")
-    logging.info("Screenshot guardado: test_password_debil.png")
-
-    pause()
-
-    logging.info("=== TEST FINALIZADO OK ===")
-
-    driver.quit()
+        except Exception as e:
+            logging.error(f"Test falló: {e}")
+            self.take_screenshot("error_password_debil.png")
+            raise
+        finally:
+            self.teardown_method()
 
 
 if __name__ == "__main__":
-    test_password_debil()
+    test = TestPasswordDebil()
+    test.test_password_debil()
