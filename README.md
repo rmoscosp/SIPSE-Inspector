@@ -137,6 +137,52 @@ python test_rol_vacio_cp05.py
 Cada prueba genera logs en consola e, en los casos que aplica, un **screenshot automático** al finalizar. Si falla, se guarda un screenshot de error.
 
 > ⚠️ **Nota**: Para el test CP-01 (registro exitoso), reinicia el backend antes de ejecutarlo si ya hay usuarios registrados en memoria.
+---
+
+## 🧾 Análisis de calidad con SonarQube
+
+Se agregó un archivo `sonar-project.properties` en la raíz del proyecto para configurar el análisis.
+
+### Pasos básicos
+
+1. Genera el reporte de cobertura:
+
+```bash
+coverage run -m pytest tests/ --tb=no -q
+coverage xml -o coverage.xml
+```
+
+2. Descarga y extrae SonarScanner CLI en el proyecto (ya está disponible en `sonar-scanner\sonar-scanner-8.0.1.6346`).
+3. Crea un token de usuario en SonarQube (UI > Administration > Security > Tokens) y define la variable de entorno `SONAR_TOKEN`.
+4. Ejecuta el análisis desde la raíz del proyecto:
+
+```powershell
+cd sonar-scanner\sonar-scanner-8.0.1.6346\bin
+$env:JAVA_HOME = "<PATH_TO_JDK>"
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+cmd /c "sonar-scanner.bat -Dsonar.host.url=http://localhost:9000 -Dsonar.login=%SONAR_TOKEN%"
+```
+
+5. Revisa los resultados en el servidor SonarQube en `http://localhost:9000`.
+
+### Scripts útiles
+
+- `run-sonar.ps1`: ejecuta el análisis SonarQube local usando el token y el JDK configurado.
+- `export-sonar-results.ps1`: exporta un informe JSON con métricas y análisis recientes desde SonarQube.
+
+### Exportar resultados
+
+Puedes mostrar resultados sin tomar capturas de pantalla usando el script:
+
+```powershell
+cd C:\Dev\PruebasYMetricas\SIPSE-Inspector
+$env:SONAR_TOKEN = "squ_cae29eb394c9c77078f857ff8107aae053a5ebf8"
+.\export-sonar-results.ps1
+```
+
+El script genera `sonar-report.json` con las métricas clave y los análisis recientes.
+
+También puedes exportar información directamente desde la UI de SonarQube en `http://localhost:9000`.
 
 ---
 

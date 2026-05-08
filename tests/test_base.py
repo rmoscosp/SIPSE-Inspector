@@ -12,14 +12,13 @@ logging.basicConfig(
 )
 
 class BaseTest:
-    def __init__(self, url="http://localhost:5500/index.html", slow_mode=True):
-        self.url = url
-        self.slow_mode = slow_mode
+    def setup_method(self, method=None):
+        """Inicializa variables, el driver y el wait"""
+        self.url = "http://localhost:5500/index.html"
+        self.slow_mode = True
         self.driver = None
         self.wait = None
 
-    def setup_method(self):
-        """Inicializa el driver y wait"""
         try:
             self.driver = webdriver.Chrome()
             self.driver.maximize_window()
@@ -29,7 +28,7 @@ class BaseTest:
             logging.error(f"Error al inicializar driver: {e}")
             raise
 
-    def teardown_method(self):
+    def teardown_method(self, method=None):
         """Cierra el driver"""
         if self.driver:
             try:
@@ -76,8 +75,8 @@ class BaseTest:
         """Envía el formulario"""
         try:
             logging.info("Enviando formulario")
-            self.driver.find_element(By.XPATH, "//button[contains(text(),'Crear cuenta')]").click()
             self.pause()
+            self.driver.find_element(By.XPATH, "//button[contains(text(),'Crear cuenta')]").click()
         except Exception as e:
             logging.error(f"Error al enviar formulario: {e}")
             raise

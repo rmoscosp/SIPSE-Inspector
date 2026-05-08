@@ -1,5 +1,8 @@
+import uuid
 from test_base import BaseTest
 import logging
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 class TestRegistroExitoso(BaseTest):
     def test_registro_exitoso(self):
@@ -10,10 +13,15 @@ class TestRegistroExitoso(BaseTest):
             # Ir a registro
             self.navigate_to_register()
 
+            # Datos únicos para evitar duplicados
+            unique_id = uuid.uuid4().hex[:6]
+            username = f"juan_usuario_{unique_id}"
+            email = f"juan{unique_id}@empresa.com"
+
             # Llenar formulario
             self.fill_form(
-                username="juan_usuario1",
-                email="juan@empresa.com",
+                username=username,
+                email=email,
                 password="Juan@12345",
                 role="Tecnico"
             )
@@ -31,6 +39,7 @@ class TestRegistroExitoso(BaseTest):
             assert "Registro exitoso" in mensaje, f"Mensaje inesperado: {mensaje}"
 
             # Verificar redirección a login
+            self.wait.until(EC.visibility_of_element_located((By.ID, "loginView")))
             assert self.is_element_displayed("loginView"), "No se redirigió a login"
 
         except Exception as e:
