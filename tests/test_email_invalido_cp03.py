@@ -1,113 +1,65 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from test_base import BaseTest
 import logging
-import time
+from selenium.webdriver.common.by import By
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
+class TestEmailInvalido(BaseTest):
+    def test_email_invalido(self):
+        try:
+            logging.info("=== INICIO TEST: EMAIL INVÁLIDO ===")
 
-URL = "http://localhost:5500/index.html"
-SLOW_MODE = True
+            self.setup_method()
+            self.go_to_url()
 
-def pause():
-    if SLOW_MODE:
-        time.sleep(1.5)
+            # Ir a registro
+            self.navigate_to_register()
 
-def test_email_invalido():
-    logging.info("=== INICIO TEST: EMAIL INVÁLIDO ===")
+            # Llenar formulario con email inválido
+            self.fill_form(
+                username="juan123",
+                email="juanemail.com",
+                password="Juan12345",
+                role="Tecnico"
+            )
 
-    driver = webdriver.Chrome()
-    driver.maximize_window()
-    driver.get(URL)
+            # Enviar
+            self.submit_form()
 
-    wait = WebDriverWait(driver, 10)
+            # Validar mensaje de error de email
+            self.wait_for_message("emailError")
+            error_msg = self.get_error_message("emailError")
+            logging.info(f"Mensaje: {error_msg}")
+            assert "formato válido" in error_msg
 
-    pause()
+            # Validar que no se envió
+            reg_msg = self.get_message("regMsg")
+            assert reg_msg == "", "El formulario se envió cuando no debía"
 
-    # =========================
-    # Ir a REGISTER
-    # =========================
-    logging.info("Ir a registro")
-    wait.until(EC.element_to_be_clickable(
-        (By.XPATH, "//p[contains(text(),'Regístrate')]")
-    )).click()
+            # Corregir email
+            logging.info("Corrigiendo email")
+            email_input = self.driver.find_element(By.ID, "regEmail")
+            email_input.clear()
+            email_input.send_keys("juan@email.com")
+            self.pause()
 
-    pause()
+            # Verificar que desaparece el error
+            logging.info("Verificando que desaparece el error")
+            self.wait.until(lambda d: d.find_element(By.ID, "emailError").text == "")
+            error_msg_after = self.get_error_message("emailError")
+            assert error_msg_after == "", "El error no desapareció"
 
-    # =========================
-    # Llenar formulario (email inválido)
-    # =========================
-    logging.info("Llenando formulario con email inválido")
+            # Screenshot
+            self.take_screenshot("test_email_invalido.png")
 
-    wait.until(EC.presence_of_element_located((By.ID, "regUsername"))).send_keys("juan123")
-    driver.find_element(By.ID, "regEmail").send_keys("juanemail.com")  # ❌ sin @
-    driver.find_element(By.ID, "regPassword").send_keys("Juan12345")
-    driver.find_element(By.ID, "regRole").send_keys("Tecnico")
+            logging.info("=== TEST FINALIZADO OK ===")
 
-    pause()
-
-    # =========================
-    # Click registrar
-    # =========================
-    logging.info("Intentando registrar")
-    driver.find_element(By.XPATH, "//button[contains(text(),'Crear cuenta')]").click()
-
-    pause()
-
-    # =========================
-    # VALIDACIÓN 1: mensaje email
-    # =========================
-    logging.info("Validando mensaje de error de email")
-
-    wait.until(lambda d: d.find_element(By.ID, "emailError").text != "")
-
-    error_msg = driver.find_element(By.ID, "emailError").text
-    logging.info(f"Mensaje: {error_msg}")
-
-    assert "formato válido" in error_msg
-
-    # =========================
-    # VALIDACIÓN 2: NO envío
-    # =========================
-    logging.info("Validando que no se envió")
-
-    reg_msg = driver.find_element(By.ID, "regMsg").text
-    assert reg_msg == "", "El formulario se envió cuando no debía"
-
-    # =========================
-    # VALIDACIÓN 3: corregir email
-    # =========================
-    logging.info("Corrigiendo email")
-
-    email_input = driver.find_element(By.ID, "regEmail")
-    email_input.clear()
-    email_input.send_keys("juan@email.com")
-
-    pause()
-
-    # =========================
-    # VALIDACIÓN 4: error desaparece
-    # =========================
-    logging.info("Verificando que desaparece el error")
-
-    wait.until(lambda d: d.find_element(By.ID, "emailError").text == "")
-
-    error_msg_after = driver.find_element(By.ID, "emailError").text
-    assert error_msg_after == "", "El error no desapareció"
-
-    # =========================
-    # Screenshot
-    # =========================
-    driver.save_screenshot("test_email_invalido.png")
-    logging.info("Screenshot guardado")
-
-    pause()
-
-    logging.info("=== TEST FINALIZADO OK ===")
-
-    driver.quit()
+        except Exception as e:
+            logging.error(f"Test falló: {e}")
+            self.take_screenshot("error_email_invalido.png")
+            raise
+        finally:
+            self.teardown_method()
 
 
 if __name__ == "__main__":
-    test_email_invalido()
+    test = TestEmailInvalido()
+    test.test_email_invalido()

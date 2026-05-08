@@ -1,41 +1,55 @@
-from selenium import webdriver
+import uuid
+from test_base import BaseTest
+import logging
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# CONFIG
-URL = "http://localhost:5500/index.html"
+class TestRegistroExitoso(BaseTest):
+    def test_registro_exitoso(self):
+        try:
+            self.setup_method()
+            self.go_to_url()
 
-def test_registro_exitoso():
-    driver = webdriver.Chrome()
-    driver.get(URL)
+            # Ir a registro
+            self.navigate_to_register()
 
-    wait = WebDriverWait(driver, 10)
+            # Datos únicos para evitar duplicados
+            unique_id = uuid.uuid4().hex[:6]
+            username = f"juan_usuario_{unique_id}"
+            email = f"juan{unique_id}@empresa.com"
 
-    # Ir a registro
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//p[contains(text(),'Regístrate')]"))).click()
+            # Llenar formulario
+            self.fill_form(
+                username=username,
+                email=email,
+                password="Juan@12345",
+                role="Tecnico"
+            )
 
-    # Llenar formulario
-    wait.until(EC.presence_of_element_located((By.ID, "regUsername"))).send_keys("juan_usuario1")
-    driver.find_element(By.ID, "regEmail").send_keys("juan@empresa.com")
-    driver.find_element(By.ID, "regPassword").send_keys("Juan@12345")
-    driver.find_element(By.ID, "regRole").send_keys("Tecnico")
+            # Enviar
+            self.submit_form()
 
-    # Enviar
-    driver.find_element(By.XPATH, "//button[contains(text(),'Crear cuenta')]").click()
+            # Esperar mensaje
+            self.wait_for_message("regMsg")
 
-    wait.until(lambda d: d.find_element(By.ID, "regMsg").text != "")
+            mensaje = self.get_message("regMsg")
 
-    mensaje = driver.find_element(By.ID, "regMsg").text
+            print("MENSAJE:", mensaje)
 
-    print("MENSAJE:", mensaje)
+            assert "Registro exitoso" in mensaje, f"Mensaje inesperado: {mensaje}"
 
-    assert "Registro exitoso" in mensaje, f"Mensaje inesperado: {mensaje}"
+            # Verificar redirección a login
+            self.wait.until(EC.visibility_of_element_located((By.ID, "loginView")))
+            assert self.is_element_displayed("loginView"), "No se redirigió a login"
 
-    wait.until(lambda d: d.find_element(By.ID, "loginView").is_displayed())
-
-    driver.quit()
+        except Exception as e:
+            logging.error(f"Test falló: {e}")
+            self.take_screenshot("error_registro_exitoso.png")
+            raise
+        finally:
+            self.teardown_method()
 
 
 if __name__ == "__main__":
-    test_registro_exitoso()
+    test = TestRegistroExitoso()
+    test.test_registro_exitoso()

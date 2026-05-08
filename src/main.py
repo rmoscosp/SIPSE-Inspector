@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from controller.user_controller import router as user_router
+from src.controller.user_controller import router as user_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
