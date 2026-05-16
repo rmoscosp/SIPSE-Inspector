@@ -43,7 +43,7 @@ jobs:
           pip install pipenv
 
       - name: Instalar dependencias del proyecto
-        run: pipenv install --dev --deploy --ignore-pipfile
+        run: pipenv install --dev --python $(which python)
 
       - name: Ejecutar pruebas unitarias con cobertura
         run: |
