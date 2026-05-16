@@ -36,7 +36,7 @@ class UserService:
             raise ValueError("La contraseña debe incluir al menos una letra mayúscula.")
         if not re.search(r'[a-z]', password):
             raise ValueError("La contraseña debe incluir al menos una letra minúscula.")
-        if not re.search(r'[0-9]', password):
+        if not re.search(r'\d', password):
             raise ValueError("La contraseña debe incluir al menos un número.")
         if not re.search(r'[!@#$%^&*]', password):
             raise ValueError("La contraseña debe incluir al menos un carácter especial (!@#$%^&*).")
