@@ -8,7 +8,6 @@ bcrypt = "*"
 fastapi = "*"
 uvicorn = "*"
 pydantic = {extras = ["email"], version = "*"}
-selenium = "*"
 
 [dev-packages]
 pytest = "*"
