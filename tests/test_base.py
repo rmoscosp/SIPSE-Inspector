@@ -67,29 +67,29 @@ class BaseTest:
             logging.error(f"Error al navegar a registro (timeout): {e}")
             raise
 
-def fill_form(self, username="", email="", password="", role=""):
-    """Llena el formulario de registro"""
-    try:
-        logging.info("Llenando formulario")
-        if username:
-            el = self.wait.until(EC.presence_of_element_located((By.ID, "regUsername")))
-            el.clear()                          # ← limpia primero
-            el.send_keys(username)
-        if email:
-            el = self.driver.find_element(By.ID, "regEmail")
-            el.clear()                          # ← limpia primero
-            el.send_keys(email)
-        if password:
-            el = self.driver.find_element(By.ID, "regPassword")
-            el.clear()                          # ← limpia primero
-            el.send_keys(password)
-        if role:
-            from selenium.webdriver.support.ui import Select
-            Select(self.driver.find_element(By.ID, "regRole")).select_by_value(role)
-        self.pause()
-    except NoSuchElementException as e:
-        logging.error(f"Error al llenar formulario (elemento no encontrado): {e}")
-        raise
+    def fill_form(self, username="", email="", password="", role=""):
+        """Llena el formulario de registro"""
+        try:
+            logging.info("Llenando formulario")
+            if username:
+                el = self.wait.until(EC.presence_of_element_located((By.ID, "regUsername")))
+                el.clear()                          # ← limpia primero
+                el.send_keys(username)
+            if email:
+                el = self.driver.find_element(By.ID, "regEmail")
+                el.clear()                          # ← limpia primero
+                el.send_keys(email)
+            if password:
+                el = self.driver.find_element(By.ID, "regPassword")
+                el.clear()                          # ← limpia primero
+                el.send_keys(password)
+            if role:
+                from selenium.webdriver.support.ui import Select
+                Select(self.driver.find_element(By.ID, "regRole")).select_by_value(role)
+            self.pause()
+        except NoSuchElementException as e:
+            logging.error(f"Error al llenar formulario (elemento no encontrado): {e}")
+            raise
 
     def submit_form(self):
         """Envía el formulario"""
