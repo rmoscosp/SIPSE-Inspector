@@ -15,14 +15,25 @@ logging.basicConfig(
 class BaseTest:
     def setup_method(self, method=None):
         """Inicializa variables, el driver y el wait"""
-        self.url = "http://localhost:5500/index.html"
-        self.slow_mode = True
+        # URL parametrizable: en CI se inyecta BASE_URL, local cae al default
+        base_url = os.environ.get("BASE_URL", "http://localhost:5500")
+        self.url = f"{base_url}/index.html"
+        self.slow_mode = os.environ.get("HEADLESS") != "true"
         self.driver = None
         self.wait = None
 
+        # Configuración de Chrome (headless en CI, normal en local)
+        options = Options()
+        if os.environ.get("HEADLESS") == "true":
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--window-size=1920,1080")
+
         try:
-            self.driver = webdriver.Chrome()
-            self.driver.maximize_window()
+            self.driver = webdriver.Chrome(options=options)
+            if os.environ.get("HEADLESS") != "true":
+                self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
             logging.info("Driver inicializado correctamente")
         except WebDriverException as e:
