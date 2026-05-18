@@ -64,8 +64,8 @@ class UserService:
         UserService.validar_rol(data.role)
 
         # duplicado
-        # if any(u["email"] == data.email for u in usuarios_db):
-        #    raise ValueError("Ya existe un usuario registrado con ese correo.")
+        if any(u["email"] == data.email for u in usuarios_db):
+            raise ValueError("Ya existe un usuario registrado con ese correo.")
 
         # RF-06
         password_hash = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt())
